@@ -1,0 +1,174 @@
+FUNCTION sphere_function(x)
+    RETURN SUM(xi^2 FOR EACH xi IN x)
+END FUNCTION
+
+
+FUNCTION ackley_function(x)
+    d = LENGTH(x)
+    sum1 = SUM(xi^2 FOR EACH xi IN x)
+    sum2 = SUM(COS(2 * PI * xi) FOR EACH xi IN x)
+    RETURN -20.0 * EXP(-0.2 * SQRT(0.5 * sum1)) - EXP(0.5 * sum2) + e + 20
+END FUNCTION
+
+
+FUNCTION schwefel_function(x)
+    RETURN -SUM(xi * SIN(SQRT(ABS(xi))) FOR EACH xi IN x)
+END FUNCTION
+
+
+FUNCTION levy_function(x)
+    d = LENGTH(x)
+    w = [1 + (xi - 1) / 4 FOR EACH xi IN x]
+    term1 = (SIN(PI * w[0])) ^ 2
+    term2 = SUM((wi - 1) ^ 2 * (1 + 10 * (SIN(PI * wi + 1)) ^ 2) FOR EACH wi IN w[0 TO d-2])
+    term3 = (w[d-1] - 1) ^ 2 * (1 + (SIN(2 * PI * w[d-1])) ^ 2)
+    RETURN term1 + term2 + term3
+END FUNCTION
+
+
+FUNCTION perm_function(x, beta=10)
+    result = SUM((i * (xi ^ 2) ^ beta) FOR i, xi IN ENUMERATE(x, START=1))
+    RETURN result
+END FUNCTION
+
+
+
+FUNCTION initialize_population(pop_size, dim)
+    population = []
+    FOR i FROM 1 TO pop_size DO
+        individual = []
+        FOR j FROM 1 TO dim DO
+            individual[j] = RANDOM_UNIFORM(-5.12, 5.12)
+        population[i] = individual
+    RETURN population
+END FUNCTION
+
+
+FUNCTION fitness_function(individual, func_name)
+    IF func_name == 'sphere_function' THEN
+        RETURN sphere_function(individual)
+    ELSE IF func_name == 'ackley_function' THEN
+        RETURN ackley_function(individual)
+    ELSE IF func_name == 'schwefel_function' THEN
+        RETURN schwefel_function(individual)
+    ELSE IF func_name == 'levy_function' THEN
+        RETURN levy_function(individual)
+    ELSE IF func_name == 'perm_function' THEN
+        RETURN perm_function(individual)
+END FUNCTION
+
+
+FUNCTION tournament_selection(population, fitness_scores, tournament_size)
+    selected_individuals = []
+    FOR i FROM 1 TO LENGTH(population) DO
+        tournament_indices = RANDOM_SAMPLE(1 TO LENGTH(population), tournament_size)
+        tournament_fitness_scores = [fitness_scores[tournament_indices[j]] FOR j FROM 1 TO tournament_size]
+        winner_index = tournament_indices[ARGMIN(tournament_fitness_scores)]
+        selected_individuals[i] = population[winner_index]
+    RETURN selected_individuals
+END FUNCTION
+
+
+FUNCTION crossover(parent1, parent2)
+    crossover_point = RANDOM_INT(1, LENGTH(parent1) - 1)
+    child1 = CONCATENATE(parent1[1 TO crossover_point], parent2[crossover_point+1 TO END])
+    child2 = CONCATENATE(parent2[1 TO crossover_point], parent1[crossover_point+1 TO END])
+    RETURN child1, child2
+END FUNCTION
+
+
+FUNCTION mutate(individual, mutation_rate)
+    FOR i FROM 1 TO LENGTH(individual) DO
+        IF RANDOM() < mutation_rate THEN
+            individual[i] = 1 - individual[i]
+    RETURN individual
+END FUNCTION
+
+
+FUNCTION evolutionary_algorithm(pop_size, dim, func_name, tournament_size, num_generations, mutation_rate)
+    population = initialize_population(pop_size, dim)
+    history = [COPY(population)]
+    
+    FOR generation FROM 1 TO num_generations DO
+        fitness_scores = [fitness_function(individual, func_name) FOR individual IN population]
+        
+        selected_individuals = tournament_selection(population, fitness_scores, tournament_size)
+        new_population = []
+        
+        FOR i FROM 1 TO pop_size / 2 DO
+            parent1, parent2 = RANDOM_CHOICES(selected_individuals, k=2)
+            child1, child2 = crossover(parent1, parent2)
+            child1 = mutate(child1, mutation_rate)
+            child2 = mutate(child2, mutation_rate)
+            new_population.APPEND(child1)
+            new_population.APPEND(child2)
+        
+        population = new_population
+        history.APPEND(COPY(population))
+    
+    best_individual = MIN(population, key=lambda x: fitness_function(x, func_name))
+    RETURN best_individual, fitness_function(best_individual, func_name), history
+END FUNCTION
+
+
+FUNCTION differential_evolution(pop_size, dim, func_name, num_generations, mutation_factor, crossover_rate)
+    population = initialize_population(pop_size, dim)
+    history = [COPY(population)]
+    
+    FOR generation FROM 1 TO num_generations DO
+        FOR i FROM 1 TO pop_size DO
+            target_vector = population[i]
+            indices = [idx FOR idx IN 1 TO pop_size IF idx != i]
+            a, b, c = RANDOM_SAMPLE(indices, 3)
+            donor_vector = ADD(population[a], mutation_factor * SUBTRACT(population[b], population[c]))
+            crossed_vector = []
+            
+            FOR j FROM 1 TO dim DO
+                IF RANDOM() < crossover_rate OR j == RANDOM_INT(1, dim) THEN
+                    crossed_vector[j] = donor_vector[j]
+                ELSE
+                    crossed_vector[j] = target_vector[j]
+            
+            IF fitness_function(crossed_vector, func_name) < fitness_function(target_vector, func_name) THEN
+                population[i] = crossed_vector
+        
+        history.APPEND(COPY(population))
+    
+    best_individual = MIN(population, key=lambda x: fitness_function(x, func_name))
+    RETURN best_individual, fitness_function(best_individual, func_name), history
+END FUNCTION
+
+
+BEGIN MAIN PROGRAM
+    CALL random.seed(1234)
+    pop_size = 100  
+    dim = 3  //random.randint(3, 49)  
+    
+    func_dict = {
+        1: 'sphere_function',
+        2: 'ackley_function',
+        3: 'schwefel_function',
+        4: 'levy_function',
+        5: 'perm_function'
+    }
+    
+    func_name = "ackley_function"
+    
+    tournament_size = 5
+    num_generations = 10
+    mutation_rate = 0.01
+    mutation_factor = 0.5
+    crossover_rate = 0.7
+
+    (best_solution, best_fitness, history) = evolutionary_algorithm(
+        pop_size, dim, func_name, tournament_size, num_generations, mutation_rate)
+    
+    PRINT "Najlepsze rozwiązanie:", best_solution
+    PRINT "Wartość funkcji celu dla najlepszego rozwiązania:", best_fitness
+
+    (best_solution, best_fitness, history2) = differential_evolution(
+        pop_size, dim, func_name, num_generations, mutation_factor, crossover_rate)
+    
+    PRINT "Najlepsze rozwiązanie:", best_solution
+    PRINT "Wartość funkcji celu dla najlepszego rozwiązania:", best_fitness
+END MAIN PROGRAM
