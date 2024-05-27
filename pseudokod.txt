@@ -1,3 +1,23 @@
+Opis:
+
+1. Odczytanie współrzędnych miast z pliku i zapisanie ich w liście.
+2. Obliczenie odległości między każdym parą miast i zapisanie wyników w macierzy odległości.
+3. Inicjalizacja trasy poprzez losowe ułożenie miast.
+4. Obliczenie całkowitej długości początkowej trasy.
+5. Ustawienie początkowej trasy jako najlepszej znalezionej dotychczas.
+6. Rozpoczęcie iteracji algorytmu symulowanego wyżarzania:
+    Wybór jednej z trzech możliwych modyfikacji trasy (zamiana, odwrócenie segmentu, przeniesienie miasta).
+    Utworzenie nowej trasy na podstawie wybranej modyfikacji.
+    Obliczenie całkowitej długości nowej trasy.
+    Porównanie nowej trasy z obecną:
+        Jeśli nowa trasa jest krótsza, zaakceptowanie jej.
+        Jeśli nowa trasa jest dłuższa, zaakceptowanie jej z pewnym prawdopodobieństwem zależnym od temperatury.
+    Aktualizacja najlepszej trasy, jeśli nowa trasa jest lepsza.
+    Zmniejszenie temperatury według ustalonego współczynnika chłodzenia.
+7. Po zakończeniu iteracji, zwrócenie najlepszej znalezionej trasy i jej długości.
+8. Powtórzenie powyższych kroków dla każdego pliku z danymi miast.
+9. Wyświetlenie wyników dla każdego zestawu danych: najlepsza trasa i jej długość.
+
 FUNCTION read_tsp_file(file_path):
     OPEN file at file_path
     INITIALIZE cities as empty list
