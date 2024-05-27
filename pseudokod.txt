@@ -1,0 +1,55 @@
+Pseudokod implementuje algorytm zachłanny do rozwiązania problemu komiwojażera, który odwiedza każde miasto dokładnie raz i wraca do miasta początkowego, minimalizując całkowitą długość trasy.
+- Otwierany jest plik z koordynatami, które następnie są zapisywane do listy
+- Wyznaczana jest trasa przy użyciu algorytmu zachłannego i odległości euklidesowej
+- Obliczana jest długość całej trasy wyznaczonej przez algorytm
+- Zapisywana do pliku jest nazwa pliku z koordynatami, czas wykonania się algorytmu oraz długość całej trasy
+
+Funkcja odległość_euklidesowa(punkt1, punkt2):
+    zwróć pierwiastek((punkt1[x] - punkt2[x])**2 + (punkt1[y] - punkt2[y])**2)
+
+
+Funkcja AlgorytmZachłanny(koordynaty):
+    liczba_miast = długość(koordynaty)
+    visited = lista o długości liczba_miast wypełniona wartością False
+    path = [0]
+    visited[0] = True
+
+    Dopóki długość(path) < liczba_miast:
+        last_city = ostatni element z path
+        min_distance = nieskończoność
+        nearest_city = None
+
+        dla i, coord w enumeracja(koordynaty):
+            Jeśli visited[i] jest False:
+                distance = odległość_euklidesowa(koordynaty[last_city], coord)
+                Jeśli distance < min_distance:
+                    min_distance = distance
+                    nearest_city = i
+
+        Dodaj nearest_city do path
+        visited[nearest_city] = True
+
+    Dodaj 0 do path (powrót do początkowego miasta)
+
+    Zwróć path
+
+
+Funkcja ObliczanieDrogi(file_name, info_file):
+    koordynaty = pusta lista
+
+    Otwórz plik file_name:
+        # zapisywanie koordynatów z pliku tekstowego
+        koordynaty.dodaj((x, y))
+
+    start_time = obecny czas
+    path = AlgorytmZachłanny(koordynaty)
+    execution_time = obecny czas - start_time
+    cała_trasa = 0
+
+    Dla i od 0 do długość(path) - 1:
+        cała_trasa += odległość_euklidesowa(koordynaty[path[i] #pierwsze miasto], koordynaty[path[i + 1] #następne miasto])
+
+    Zapisz do info_file: file_name, execution_time, total_distance
+
+    Zwróć execution_time, obecny czas - start_time
+
